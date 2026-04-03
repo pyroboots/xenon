@@ -41,7 +41,6 @@ public class XenonRT
         XenonBasicLibrary.Implement(ref Compiler);
         SetImmutability("console", "core library");
         
-        //RegisterFunc("func", XenonFunction.FunctionCtor);
         Runtime.Environment["func"] = XenonKeyword<XenonFunctionKeyword>.Static();
         SetImmutability("func", "keyword");
         RegisterFunc("type", XenonType.TypeCtor);
