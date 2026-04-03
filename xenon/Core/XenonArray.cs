@@ -53,13 +53,12 @@ public class XenonArray
         LuaTable arguments = ctx.Arguments[0].Read<LuaTable>();
         string enforcedType = arguments[1].Read<string>();
 
-        LuaTable array = new()
+        LuaTable array = new();
+        LuaTable meta = new()
         {
             ["__type"] = XenonRT.T_ARRAY,
             ["__arrayType"] = enforcedType,
-        };
-        LuaTable meta = new()
-        {
+            
             ["__newindex"] = new LuaFunction("__set", Set),
             ["__index"] = new LuaFunction("__get", Get),
             ["__len"] = new LuaFunction("__length", Length),

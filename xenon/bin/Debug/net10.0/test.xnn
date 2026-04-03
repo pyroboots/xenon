@@ -10,13 +10,10 @@ john = person {
     alive = true
 }
 
-foo = func {{p = t_str}, [[
-    console.outLn{a.p}
-]]}
+foo = func {{p = t_person}, [[
+    console.outLn{a.p.name}
+]], t_void}
 
 foo{
-    p = "hi"
+    p = john
 }
-
---coolArray = array {}
-console.outLn{void}

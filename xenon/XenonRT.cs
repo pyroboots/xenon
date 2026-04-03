@@ -1,6 +1,6 @@
 using System.Text;
 using Lua;
-
+using xenon.Core;
 using xenon.Libs;
 
 namespace xenon;
@@ -16,7 +16,7 @@ public class XenonRT
     public const string T_NUMBER = "t_num";
     public const string T_BOOLEAN = "t_bool";
     public const string T_FUNCTION = "t_func";
-    public const string T_LUA_FUNCTION = "t_ufunc"; // unmanaged func
+    public const string T_LUA_FUNCTION = "t_ufunc"; // unmanaged func (lua)
     public const string T_VOID = "t_void";
     public const string T_ANY = "t_any";
     public const string T_ARRAY = "t_array";
@@ -41,10 +41,14 @@ public class XenonRT
         XenonBasicLibrary.Implement(ref Compiler);
         SetImmutability("console", "core library");
         
-        Runtime.Environment["func"] = XenonKeyword<XenonFunctionKeyword>.Static();
+        Runtime.Environment["func"] = XenonClass<XenonFunctionClass>.Static();
+        Compiler.Environment["func"] = XenonClass<XenonFunctionClass>.Static();
         SetImmutability("func", "keyword");
-        RegisterFunc("type", XenonType.TypeCtor);
+        
+        Runtime.Environment["type"] = XenonClass<XenonTypeClass>.Static();
+        Compiler.Environment["type"] = XenonClass<XenonTypeClass>.Static();
         SetImmutability("type", "keyword");
+        
         RegisterFunc("array", XenonArray.ArrayCtor);
         SetImmutability("array", "keyword");
         RegisterFunc("typeof", Typeof);
@@ -93,22 +97,24 @@ public class XenonRT
 
     public static string GetType(LuaValue v)
     {
-        switch (v.Type)
+        LuaValueType t = v.Type;
+
+        if (t is LuaValueType.Boolean) return T_BOOLEAN;
+        if (t is LuaValueType.Function) return T_LUA_FUNCTION;
+        if (t is LuaValueType.Number) return T_NUMBER;
+        if (t is LuaValueType.String) return T_STRING;
+        if (t is LuaValueType.Nil) return T_VOID;
+        if (t is LuaValueType.Table)
         {
-            case LuaValueType.Boolean:
-                return T_BOOLEAN;
-            case LuaValueType.Function:
-                return T_LUA_FUNCTION;
-            case LuaValueType.Number:
-                return T_NUMBER;
-            case LuaValueType.String:
-                return T_STRING;
-            case LuaValueType.Nil:
-                return T_VOID;
+            LuaTable tbl = v.Read<LuaTable>();
+            LuaTable? meta = tbl.Metatable;
+            if (meta == null) return T_ANY;
             
-            case LuaValueType.Table:
-                return v.Read<LuaTable>()["__type"] != LuaValue.Nil 
-                    ? "t_" + v.Read<LuaTable>()["__type"] : T_ANY;
+            string? type = meta["__type"].Read<string?>();
+            if (type == null) return T_ANY;
+
+            if (type.StartsWith("t_")) return type;
+            else return "t_" + type;
         }
 
         throw new Exception($"could not get type of {v.Type.ToString()} ({v.ToString()})");

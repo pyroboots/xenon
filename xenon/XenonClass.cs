@@ -2,7 +2,7 @@ using Lua;
 
 namespace xenon;
 
-public abstract class XenonKeyword<T> where T : class, new()
+public abstract class XenonClass<T> where T : class, new()
 {
     public abstract ValueTask<LuaTable> Constructor(LuaTable args);
     private async ValueTask<int> _constructor(LuaFunctionExecutionContext ctx, CancellationToken _)
@@ -19,15 +19,19 @@ public abstract class XenonKeyword<T> where T : class, new()
         string key = ctx.GetArgument<string>(1);
 
         if (Methods.TryGetValue(key, out var func))
-            return ctx.Return(func);
+        {
+            LuaFunction wrapper = new LuaFunction(key, async (ctx, _) =>
+                ctx.Return(await func(ctx.GetArgument<LuaTable>(0))));
+            return ctx.Return(wrapper);
+        }
         else
-            throw ExceptionBuilder.MissingProperty(key, Name, "keyword");
+            throw ExceptionBuilder.MissingMember(key, Name, "keyword");
     }
 
     private async ValueTask<int> _set(LuaFunctionExecutionContext ctx, CancellationToken _)
         => throw ExceptionBuilder.InvalidKeywordOperation("set", Name);
 
-    public abstract Dictionary<string, LuaFunction> Methods { get; }
+    public abstract Dictionary<string, Func<LuaTable, ValueTask<LuaValue>>> Methods { get; }
     public abstract string Name { get; }
 
     public LuaTable Keyword
@@ -44,12 +48,17 @@ public abstract class XenonKeyword<T> where T : class, new()
                 ["__tostring"] = new LuaFunction("__string", _toString),
             };
             foreach (var kvp in Methods)
-                keyword[kvp.Key] = kvp.Value;
+            {
+                LuaFunction wrapper = new LuaFunction(kvp.Key, async (ctx, _) =>
+                    ctx.Return(await kvp.Value(ctx.GetArgument<LuaTable>(0))));
+                
+                keyword[kvp.Key] = wrapper;
+            }
             
             keyword.Metatable =  meta;
             return keyword;
         }
     }
 
-    public static LuaTable Static() => (Activator.CreateInstance<T>() as XenonKeyword<T>)!.Keyword;
+    public static LuaTable Static() => (Activator.CreateInstance<T>() as XenonClass<T>)!.Keyword;
 }

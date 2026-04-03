@@ -10,7 +10,7 @@ public static class XenonBasicLibrary
     {
         LuaFunction[] funcs =
         [
-            new LuaFunction("error", Error)
+            new("error", Error)
         ];
 
         foreach (LuaFunction f in funcs)
