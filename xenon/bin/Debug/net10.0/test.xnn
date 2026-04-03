@@ -1,0 +1,22 @@
+person = type {[[person]],
+    name = t_str,
+    age = t_num,
+    alive = t_bool
+}
+
+john = person {
+    name = "John",
+    age = 30,
+    alive = true
+}
+
+foo = func {{p = t_str}, [[
+    console.outLn{a.p}
+]]}
+
+foo{
+    p = "hi"
+}
+
+--coolArray = array {}
+console.outLn{void}

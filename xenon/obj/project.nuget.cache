@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "xBwnlGu6kvc=",
+  "success": true,
+  "projectFilePath": "/home/pyro/RiderProjects/xenon/xenon/xenon.csproj",
+  "expectedPackageFiles": [
+    "/home/pyro/.nuget/packages/luacsharp/0.5.3/luacsharp.0.5.3.nupkg.sha512"
+  ],
+  "logs": []
+}

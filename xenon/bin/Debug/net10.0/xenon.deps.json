@@ -1,0 +1,41 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "xenon/1.0.0": {
+        "dependencies": {
+          "LuaCSharp": "0.5.3"
+        },
+        "runtime": {
+          "xenon.dll": {}
+        }
+      },
+      "LuaCSharp/0.5.3": {
+        "runtime": {
+          "lib/net10.0/Lua.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "xenon/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LuaCSharp/0.5.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-qpgmCaNx08+eiWOmz7U/mXOH8DXUyLW8fsCukKjN8hVled2y4HrapsZlmrnIf9iaNfEQusUR/8d1M2XX6NIzbQ==",
+      "path": "luacsharp/0.5.3",
+      "hashPath": "luacsharp.0.5.3.nupkg.sha512"
+    }
+  }
+}

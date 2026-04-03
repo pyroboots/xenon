@@ -1,0 +1,17 @@
+/home/pyro/RiderProjects/xenon/xenon/bin/Debug/net10.0/xenon
+/home/pyro/RiderProjects/xenon/xenon/bin/Debug/net10.0/xenon.deps.json
+/home/pyro/RiderProjects/xenon/xenon/bin/Debug/net10.0/xenon.runtimeconfig.json
+/home/pyro/RiderProjects/xenon/xenon/bin/Debug/net10.0/xenon.dll
+/home/pyro/RiderProjects/xenon/xenon/bin/Debug/net10.0/xenon.pdb
+/home/pyro/RiderProjects/xenon/xenon/bin/Debug/net10.0/Lua.dll
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.csproj.AssemblyReference.cache
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.GeneratedMSBuildEditorConfig.editorconfig
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.AssemblyInfoInputs.cache
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.AssemblyInfo.cs
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.csproj.CoreCompileInputs.cache
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.csproj.Up2Date
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.dll
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/refint/xenon.dll
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.pdb
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/xenon.genruntimeconfig.cache
+/home/pyro/RiderProjects/xenon/xenon/obj/Debug/net10.0/ref/xenon.dll
