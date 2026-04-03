@@ -7,6 +7,7 @@ A syntactically sugarcoated version of Lua disguised as a programming language b
 - [`XenonRT.cs`](https://github.com/pyroboots/xenon/blob/master/xenon/XenonRT.cs) for bootstrapping and injection
 - [`xenon/Core`](https://github.com/pyroboots/xenon/tree/master/xenon/Core) for keyword implementation (`func`, `array`, `type`, etc...)
   - [`XenonKeyword.cs`](https://github.com/pyroboots/xenon/blob/master/xenon/XenonKeyword.cs) for keyword table construction
+- [`test.xnn`](https://github.com/pyroboots/xenon/blob/master/test.xnn) for example syntax
 
 # Why?
 
