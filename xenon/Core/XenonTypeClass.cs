@@ -65,9 +65,8 @@ public class XenonTypeClass : XenonClass<XenonTypeClass>
     private static async ValueTask<int> TypeLength(LuaFunctionExecutionContext ctx, CancellationToken ct)
     {
         LuaTable tbl = ctx.GetArgument<LuaTable>(0);
-        LuaTable types = tbl[PROPERTY_TYPE_KEY].Read<LuaTable>();
 
-        ctx.Return(types.ArrayLength);
+        ctx.Return(tbl.GetArrayMemory().Length);
         return 1;
     }
     
@@ -80,8 +79,10 @@ public class XenonTypeClass : XenonClass<XenonTypeClass>
     }
     
     
-    public async override ValueTask<LuaTable> Constructor(LuaTable args)
+    public async override ValueTask<LuaValue> Constructor(LuaTable args)
     {
+        if (!args.ContainsKey(1)) 
+            throw ExceptionBuilder.SyntaxMissingArg(Name, "type name", "argument 1");
         string name = args[1].Read<string>();
         XenonRT.RegisterType(name);
         
@@ -124,6 +125,6 @@ public class XenonTypeClass : XenonClass<XenonTypeClass>
         return type;
     }
 
-    public override Dictionary<string, Func<LuaTable, ValueTask<LuaValue>>> Methods => new();
+    public override Dictionary<string, XenonClassMethod> Methods => new();
     public override string Name => "type";
 }

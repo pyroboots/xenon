@@ -50,7 +50,7 @@ public class XenonFunctionClass : XenonClass<XenonFunctionClass>
         return res[0].Read<LuaFunction>();
     }
     
-    public async override ValueTask<LuaTable> Constructor(LuaTable args)
+    public async override ValueTask<LuaValue> Constructor(LuaTable args)
     {
         if (!args.ContainsKey(1)) 
             throw ExceptionBuilder.SyntaxMissingArg(Name, "argument map", "argument 1");
@@ -103,10 +103,24 @@ public class XenonFunctionClass : XenonClass<XenonFunctionClass>
         return func.Metatable!["__returnType"];
     }
 
-    public override Dictionary<string, Func<LuaTable, ValueTask<LuaValue>>> Methods { get; } = new()
+    public override Dictionary<string, XenonClassMethod> Methods { get; } = new()
     {
-        ["getArgMap"] = GetArgumentMap,
-        ["getReturnType"] = GetReturnType,
+        ["getArgMap"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = "func"
+            },
+            Method = GetArgumentMap,
+        },
+        ["getReturnType"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = "func"
+            },
+            Method = GetReturnType,
+        }
     };
     public override string Name => "func";
 }

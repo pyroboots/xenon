@@ -27,4 +27,6 @@ public class ExceptionBuilder
     
     public static XenonSyntaxException SyntaxMissingArg(string keyword, string arg, string? nuance = null)
         => new($"missing arg {arg} on keyword {keyword}" + (nuance is null ? "" : $" ({nuance})"));
+    public static XenonSyntaxException SyntaxIncorrectArgCount(int expected, int got, string? nuance = null)
+        => new($"expected {expected} arg(s), got {got}" + (nuance is null ? "" : $" ({nuance})"));
 }

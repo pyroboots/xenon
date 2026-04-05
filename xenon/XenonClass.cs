@@ -4,7 +4,7 @@ namespace xenon;
 
 public abstract class XenonClass<T> where T : class, new()
 {
-    public abstract ValueTask<LuaTable> Constructor(LuaTable args);
+    public abstract ValueTask<LuaValue> Constructor(LuaTable args);
     private async ValueTask<int> _constructor(LuaFunctionExecutionContext ctx, CancellationToken _)
         => ctx.Return(await Constructor(ctx.GetArgument<LuaTable>(1)));
 
@@ -21,7 +21,7 @@ public abstract class XenonClass<T> where T : class, new()
         if (Methods.TryGetValue(key, out var func))
         {
             LuaFunction wrapper = new LuaFunction(key, async (ctx, _) =>
-                ctx.Return(await func(ctx.GetArgument<LuaTable>(0))));
+                ctx.Return(await func.Method(ctx.GetArgument<LuaTable>(0))));
             return ctx.Return(wrapper);
         }
         else
@@ -31,7 +31,13 @@ public abstract class XenonClass<T> where T : class, new()
     private async ValueTask<int> _set(LuaFunctionExecutionContext ctx, CancellationToken _)
         => throw ExceptionBuilder.InvalidKeywordOperation("set", Name);
 
-    public abstract Dictionary<string, Func<LuaTable, ValueTask<LuaValue>>> Methods { get; }
+    public struct XenonClassMethod
+    {
+        public required Dictionary<LuaValue, string> Arguments;
+        public required Func<LuaTable, ValueTask<LuaValue>> Method;
+    }
+    
+    public abstract Dictionary<string, XenonClassMethod> Methods { get; }
     public abstract string Name { get; }
 
     public LuaTable Keyword
@@ -50,7 +56,18 @@ public abstract class XenonClass<T> where T : class, new()
             foreach (var kvp in Methods)
             {
                 LuaFunction wrapper = new LuaFunction(kvp.Key, async (ctx, _) =>
-                    ctx.Return(await kvp.Value(ctx.GetArgument<LuaTable>(0))));
+                {
+                    // function call argument checking at runtime
+                    LuaTable args = ctx.GetArgument<LuaTable>(0);
+                    if (args.ArrayLength != kvp.Value.Arguments.Count)
+                        throw ExceptionBuilder.SyntaxIncorrectArgCount(kvp.Value.Arguments.Count, args.ArrayLength, "correct call layout: " + string.Join(' ', kvp.Value.Arguments.Values));
+
+                    foreach (var argument in kvp.Value.Arguments)
+                        if (args.ContainsKey(argument.Key) == false)
+                            throw ExceptionBuilder.SyntaxMissingArg(Name, argument.Value, argument.Key.Read<string>());
+                    
+                    return ctx.Return(await kvp.Value.Method(ctx.GetArgument<LuaTable>(0)));
+                });
                 
                 keyword[kvp.Key] = wrapper;
             }

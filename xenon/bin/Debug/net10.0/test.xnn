@@ -17,3 +17,5 @@ foo = func {{p = t_person}, [[
 foo{
     p = john
 }
+
+console.outLn{#john}

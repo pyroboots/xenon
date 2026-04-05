@@ -22,7 +22,7 @@ public class XenonRT
     public const string T_ARRAY = "t_array";
     public const string T_DICTIONARY = "t_dict";
 
-    public static bool Managed = true;
+    private static bool Managed = true;
     
     public static void Bootstrap()
     {
@@ -49,8 +49,14 @@ public class XenonRT
         Compiler.Environment["type"] = XenonClass<XenonTypeClass>.Static();
         SetImmutability("type", "keyword");
         
-        RegisterFunc("array", XenonArray.ArrayCtor);
+        Runtime.Environment["array"] = XenonClass<XenonArrayClass>.Static();
+        Compiler.Environment["array"] = XenonClass<XenonArrayClass>.Static();
         SetImmutability("array", "keyword");
+        
+        Runtime.Environment["str"] = XenonClass<XenonStringClass>.Static();
+        Compiler.Environment["str"] = XenonClass<XenonStringClass>.Static();
+        SetImmutability("str", "core library");
+        
         RegisterFunc("typeof", Typeof);
         SetImmutability("typeof", "keyword");
         RegisterFunc("unmanaged", UnmanagedBlock);
