@@ -1,0 +1,48 @@
+[-] types
+    [x] array
+    [ ] dicts
+    [x] custom type
+    [x] func
+
+[-] std libs
+    [x] array
+        [x] transform
+        [x] filter
+        [x] slice
+        [x] enumerate
+        [x] measure
+        [x] append
+        [x] prepend
+        [x] insert
+        [x] contains
+        [x] find
+    [x] string
+        [x] split
+        [x] trim
+        [x] contains
+        [x] replace
+        [x] join
+        [x] measure
+        [x] substring
+        [x] startsWith
+        [x] endsWith
+        [x] charAt
+        [x] upper
+        [x] lower
+    [x] bool
+        [x] and
+        [x] or
+        [x] not
+        [x] nand
+        [x] nor
+        [x] xor
+        [x] xnor
+        [x] ternary
+        [x] whichever
+        [x] any
+        [x] all
+        [x] asNum
+        [x] fromNum
+    [ ] num
+    [ ] func
+    [ ] type

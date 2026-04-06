@@ -12,7 +12,7 @@ public abstract class XenonClass<T> where T : class, new()
         => throw ExceptionBuilder.InvalidKeywordOperation("get length", Name);
 
     private async ValueTask<int> _toString(LuaFunctionExecutionContext ctx, CancellationToken _)
-        => throw ExceptionBuilder.InvalidKeywordOperation("cast to string", Name);
+        => ctx.Return($"XenonClass: " + Name.GetHashCode());
     
     private async ValueTask<int> _get(LuaFunctionExecutionContext ctx, CancellationToken _)
     {
@@ -33,7 +33,7 @@ public abstract class XenonClass<T> where T : class, new()
 
     public struct XenonClassMethod
     {
-        public required Dictionary<LuaValue, string> Arguments;
+        public required Dictionary<LuaValue, (string Name, string Type)> Arguments;
         public required Func<LuaTable, ValueTask<LuaValue>> Method;
     }
     
@@ -47,11 +47,11 @@ public abstract class XenonClass<T> where T : class, new()
             LuaTable keyword = new();
             LuaTable meta = new()
             {
-                ["__call"] = new LuaFunction("__ctor", _constructor),
-                ["__index"] = new LuaFunction("__get", _get),
-                ["__newindex"] = new LuaFunction("__set", _set),
-                ["__len"] = new LuaFunction("__length", _length),
-                ["__tostring"] = new LuaFunction("__string", _toString),
+                ["__call"] = new LuaFunction($"__{Name}__ctor", _constructor),
+                ["__index"] = new LuaFunction($"__{Name}__get", _get),
+                ["__newindex"] = new LuaFunction($"__{Name}__set", _set),
+                ["__len"] = new LuaFunction($"__{Name}__length", _length),
+                ["__tostring"] = new LuaFunction($"__{Name}__string", _toString),
             };
             foreach (var kvp in Methods)
             {
@@ -60,11 +60,15 @@ public abstract class XenonClass<T> where T : class, new()
                     // function call argument checking at runtime
                     LuaTable args = ctx.GetArgument<LuaTable>(0);
                     if (args.ArrayLength != kvp.Value.Arguments.Count)
-                        throw ExceptionBuilder.SyntaxIncorrectArgCount(kvp.Value.Arguments.Count, args.ArrayLength, "correct call layout: " + string.Join(' ', kvp.Value.Arguments.Values));
+                        throw ExceptionBuilder.SyntaxIncorrectArgCount(kvp.Value.Arguments.Count, args.ArrayLength, "correct call pattern: " + string.Join(' ', kvp.Value.Arguments.Values));
 
                     foreach (var argument in kvp.Value.Arguments)
+                    {
                         if (args.ContainsKey(argument.Key) == false)
-                            throw ExceptionBuilder.SyntaxMissingArg(Name, argument.Value, argument.Key.Read<string>());
+                            throw ExceptionBuilder.SyntaxMissingArg(Name, argument.Value.Name, argument.Key.Read<string>());
+                        if (argument.Value.Type != XenonRT.T_ANY && (XenonRT.GetType(args[argument.Key]) != argument.Value.Type))
+                            throw ExceptionBuilder.TypeMismatch(argument.Value.Type, XenonRT.GetType(args[argument.Key]), $"argument {argument.Key.ToString()}");
+                    }
                     
                     return ctx.Return(await kvp.Value.Method(ctx.GetArgument<LuaTable>(0)));
                 });

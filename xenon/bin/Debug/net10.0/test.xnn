@@ -19,3 +19,6 @@ foo{
 }
 
 console.outLn{#john}
+
+arr = array {{t_str}, "hello", ", ", "world!"}
+console.outLn{str.join{", ", arr}}

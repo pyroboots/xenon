@@ -86,9 +86,6 @@ public class XenonFunctionClass : XenonClass<XenonFunctionClass>
     public static async ValueTask<LuaValue> GetArgumentMap(LuaTable args)
     {
         LuaTable func = args[1].Read<LuaTable>();
-        if (XenonRT.GetType(func) != XenonRT.T_FUNCTION)
-            throw ExceptionBuilder.TypeMismatch(XenonRT.T_FUNCTION, XenonRT.GetType(func));
-        
         // we can be certain that there will be a metatable
         // because funcs are always returned with one in ctor
         return func.Metatable!["__funcArgs"];
@@ -97,9 +94,6 @@ public class XenonFunctionClass : XenonClass<XenonFunctionClass>
     public static async ValueTask<LuaValue> GetReturnType(LuaTable args)
     {
         LuaTable func = args[1].Read<LuaTable>();
-        if (XenonRT.GetType(func) != XenonRT.T_FUNCTION)
-            throw ExceptionBuilder.TypeMismatch(XenonRT.T_FUNCTION, XenonRT.GetType(func));
-        
         return func.Metatable!["__returnType"];
     }
 
@@ -109,7 +103,7 @@ public class XenonFunctionClass : XenonClass<XenonFunctionClass>
         {
             Arguments = new()
             {
-                [1] = "func"
+                [1] = ("func", XenonRT.T_FUNCTION)
             },
             Method = GetArgumentMap,
         },
@@ -117,7 +111,7 @@ public class XenonFunctionClass : XenonClass<XenonFunctionClass>
         {
             Arguments = new()
             {
-                [1] = "func"
+                [1] = ("func", XenonRT.T_FUNCTION)
             },
             Method = GetReturnType,
         }
