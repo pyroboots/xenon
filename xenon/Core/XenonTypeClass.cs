@@ -84,7 +84,7 @@ public class XenonTypeClass : XenonClass<XenonTypeClass>
         if (!args.ContainsKey(1)) 
             throw ExceptionBuilder.SyntaxMissingArg(Name, "type name", "argument 1");
         string name = args[1].Read<string>();
-        XenonRT.RegisterType(name);
+        XenonRT.RegisterType($"t_{name}");
         
         LuaTable type = new();
         LuaTable meta = new()

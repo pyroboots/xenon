@@ -1,5 +1,6 @@
 using System.Text;
 using Lua;
+using Lua.Standard;
 using xenon.Core;
 using xenon.Libs;
 
@@ -21,41 +22,30 @@ public class XenonRT
     public const string T_ANY = "t_any";
     public const string T_ARRAY = "t_array";
     public const string T_DICTIONARY = "t_dict";
-
-    private static bool Managed = true;
     
     public static void Bootstrap()
     {
-        RegisterType(new(T_STRING.Skip(2).ToArray()));
-        RegisterType(new(T_NUMBER.Skip(2).ToArray()));
-        RegisterType(new(T_BOOLEAN.Skip(2).ToArray()));
-        RegisterType(new(T_FUNCTION.Skip(2).ToArray()));
-        RegisterType(new(T_LUA_FUNCTION.Skip(2).ToArray()));
-        RegisterType(new(T_VOID.Skip(2).ToArray()));
-        SetImmutability("void", "type");
-        RegisterType(new(T_ANY.Skip(2).ToArray()));
-        RegisterType(new(T_ARRAY.Skip(2).ToArray()));
-        RegisterType(new(T_DICTIONARY.Skip(2).ToArray()));
+        RegisterType(T_STRING);
+        RegisterType(T_NUMBER);
+        RegisterType(T_BOOLEAN);
+        RegisterType(T_FUNCTION);
+        RegisterType(T_LUA_FUNCTION);
+        RegisterType(T_VOID);
+        SetImmutability("void", "keyword");
+        RegisterType(T_ANY);
+        RegisterType(T_ARRAY);
+        RegisterType(T_DICTIONARY);
         
         XenonBasicLibrary.Implement(ref Runtime);
         XenonBasicLibrary.Implement(ref Compiler);
         SetImmutability("console", "core library");
         
-        Runtime.Environment["func"] = XenonClass<XenonFunctionClass>.Static();
-        Compiler.Environment["func"] = XenonClass<XenonFunctionClass>.Static();
-        SetImmutability("func", "keyword");
-        
-        Runtime.Environment["type"] = XenonClass<XenonTypeClass>.Static();
-        Compiler.Environment["type"] = XenonClass<XenonTypeClass>.Static();
-        SetImmutability("type", "keyword");
-        
-        Runtime.Environment["array"] = XenonClass<XenonArrayClass>.Static();
-        Compiler.Environment["array"] = XenonClass<XenonArrayClass>.Static();
-        SetImmutability("array", "keyword");
-        
-        Runtime.Environment["str"] = XenonClass<XenonStringClass>.Static();
-        Compiler.Environment["str"] = XenonClass<XenonStringClass>.Static();
-        SetImmutability("str", "core library");
+        RegisterKeyword<XenonFunctionClass>("func");
+        RegisterKeyword<XenonTypeClass>("type");
+        RegisterKeyword<XenonArrayClass>("array");
+        RegisterKeyword<XenonStringClass>("str");
+        RegisterKeyword<XenonBoolClass>("bool");
+        RegisterKeyword<XenonDictionaryClass>("dict");
         
         RegisterFunc("typeof", Typeof);
         SetImmutability("typeof", "keyword");
@@ -76,29 +66,36 @@ public class XenonRT
                 string key = ctx.GetArgument<string>(1);
                 LuaValue val = ctx.GetArgument(2);
                 
-                if (_immutableGlobals.ContainsKey(key) && Managed)
+                if (_immutableGlobals.ContainsKey(key))
                     throw ExceptionBuilder.ModifyImmutable(_immutableGlobals[key], key);
                 
                 _actualEnvironment[key] = val;
                 return 0;
             })
         };
+        // NOTE FOR FUTURE SELF: compiler does not need immutability, do not add
     }
 
     public static void SetImmutability(string key, string type) => _immutableGlobals[key] = type;
     
     public static void RegisterType(string type)
     {
-        string typeName = $"t_{type}";
-        _actualEnvironment[typeName] = typeName;
-        Compiler.Environment[typeName] = typeName;
-        SetImmutability(typeName, "type");
+        _actualEnvironment[type] = type;
+        Compiler.Environment[type] = type;
+        SetImmutability(type, "type");
     }
 
     public static void RegisterFunc(string name, LuaFunction func)
     {
         _actualEnvironment[name] = func;
         Compiler.Environment[name] = func;
+    }
+
+    public static void RegisterKeyword<TXenonClass>(string name) where TXenonClass : class, new()
+    {
+        _actualEnvironment[name] = XenonClass<TXenonClass>.Static();   
+        Compiler.Environment[name] = XenonClass<TXenonClass>.Static();  
+        SetImmutability(name, "keyword");
     }
 
     public static string GetType(LuaValue v)
@@ -136,11 +133,18 @@ public class XenonRT
     
     public static LuaFunction UnmanagedBlock = new(async (ctx, ct) =>
     {
-        string block = ctx.Arguments[0].Read<String>();
+        string block = ctx.Arguments[0].Read<string>();
+        LuaState unmanaged = LuaState.Create();
+        unmanaged.OpenStandardLibraries();
+        // LuaState.Environment unfortunately does not have a setter, so we need to iterate
+        foreach (var kvp in Runtime.Environment) unmanaged.Environment[kvp.Key] = kvp.Value;
         
-        Managed = false;
-        await Runtime.DoStringAsync(block);
-        Managed = true;
-        return 0;
+        LuaValue[] results = await unmanaged.DoStringAsync(block);
+        // restore env
+        foreach (var kvp in unmanaged.Environment) Runtime.Environment[kvp.Key] = kvp.Value;
+        foreach (LuaValue result in results) ctx.Return(result);
+        
+        unmanaged.Dispose();
+        return results.Length;
     });
 }
