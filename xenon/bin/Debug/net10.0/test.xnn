@@ -22,3 +22,10 @@ console.outLn{#john}
 
 arr = array {{t_str}, "hello", ", ", "world!"}
 console.outLn{str.join{", ", arr}}
+
+bar = dict {{t_str, t_str}, 
+    ["foo"] = "xob",
+    ["baz"] = "bar"
+}
+
+console.outLn{array.contains{arr, "hello"}}

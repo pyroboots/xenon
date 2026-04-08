@@ -61,14 +61,9 @@ public class XenonTypeClass : XenonClass<XenonTypeClass>
         valProxy[key] = val;
         return 0;
     }
-    
-    private static async ValueTask<int> TypeLength(LuaFunctionExecutionContext ctx, CancellationToken ct)
-    {
-        LuaTable tbl = ctx.GetArgument<LuaTable>(0);
 
-        ctx.Return(tbl.GetArrayMemory().Length);
-        return 1;
-    }
+    private static async ValueTask<int> TypeLength(LuaFunctionExecutionContext ctx, CancellationToken ct)
+        => throw ExceptionBuilder.InvalidKeywordOperation("measure", "type");
     
     private static async ValueTask<int> TypeToString(LuaFunctionExecutionContext ctx, CancellationToken ct)
     {
@@ -124,7 +119,38 @@ public class XenonTypeClass : XenonClass<XenonTypeClass>
         type[PROPERTY_READONLY_KEY] = propertyReadonlyMap;
         return type;
     }
+    
+    public static async ValueTask<LuaValue> TypeMeasureHeader(LuaTable args)
+    {   
+        LuaTable type = args[1].Read<LuaTable>();
+        return type.Metatable!.ArrayLength + 1;
+    }
+    public static async ValueTask<LuaValue> TypeGetHeaderProp(LuaTable args)
+    {   
+        LuaTable type = args[1].Read<LuaTable>();
+        string prop = args[2].Read<string>();
 
-    public override Dictionary<string, XenonClassMethod> Methods => new();
+        return type.Metatable![$"__{prop}"].Read<string>();
+    }
+
+    public override Dictionary<string, XenonClassMethod> Methods => new()
+    {
+        ["measureHeader"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("type", XenonRT.T_ANY)
+            },
+            Method = TypeMeasureHeader
+        },
+        ["getHeaderProp"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("type", XenonRT.T_ANY)
+            },
+            Method = TypeGetHeaderProp
+        }
+    };
     public override string Name => "type";
 }

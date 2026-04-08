@@ -28,6 +28,11 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
     {
         LuaTable dict = ctx.GetArgument<LuaTable>(0);
         LuaValue key = ctx.GetArgument(1);
+        string expectedKeyType = dict.Metatable!["__keyType"].Read<string>();
+        string keyType = XenonRT.GetType(key);
+        
+        if (expectedKeyType != keyType) 
+            throw ExceptionBuilder.TypeMismatch(expectedKeyType, keyType, "dict index");
         
         if (dict.ContainsKey(key) == false)
             throw new KeyNotFoundException($"key {key.ToString()} not present in dictionary");
@@ -77,7 +82,181 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
 
         return dict;
     }
+    
+    public static async ValueTask<LuaValue> DictFilter(LuaTable args)
+    {
+        LuaTable dict = args[1].Read<LuaTable>();
+        LuaTable func = args[2].Read<LuaTable>();
+        if (func.Metatable!["__returnType"].Read<string>() != XenonRT.T_BOOLEAN)
+            throw ExceptionBuilder.TypeMismatch(XenonRT.T_BOOLEAN, func.Metatable!["__returnType"].Read<string>(),
+                "filter return");
+        
+        LuaFunction innerFunc = func.Metatable!["__call"].Read<LuaFunction>();
+        LuaTable newDict = new()
+        {
+            [1] = new LuaTable
+            {
+                [1] = dict.Metatable!["__keyType"].Read<string>(),
+                [2] = dict.Metatable!["__valType"].Read<string>(),
+            }
+        };
+        foreach (var kvp in dict)
+        {
+            LuaTable funcArgs = new()
+            {
+                ["key"] = kvp.Key,
+                ["value"] = kvp.Value
+            };
+            LuaValue result = (await XenonRT.Runtime.CallAsync(innerFunc, [dict, funcArgs]))[0];
+            if (result.ToBoolean()) newDict[kvp.Key] = kvp.Value;
+        }
+        
+        return await new XenonDictionaryClass().Constructor(newDict);   
+    }
+    public static async ValueTask<LuaValue> DictEnumerate(LuaTable args)
+    {   
+        LuaTable dict = args[1].Read<LuaTable>();
+        LuaTable func = args[2].Read<LuaTable>();
+        
+        LuaFunction innerFunc = func.Metatable!["__call"].Read<LuaFunction>();
+        foreach (var kvp in dict)
+        {
+            LuaTable funcArgs = new()
+            {
+                ["key"] = kvp.Key,
+                ["value"] = kvp.Value,
+            };
+            await XenonRT.Runtime.CallAsync(innerFunc, [dict, funcArgs]);
+        }
+        
+        return LuaValue.Nil;
+    }
+    public static async ValueTask<LuaValue> DictMeasure(LuaTable args)
+    {   
+        LuaTable dict = args[1].Read<LuaTable>();
+        return dict.ArrayLength + 1;
+    }
+    public static async ValueTask<LuaValue> DictAdd(LuaTable args)
+    {   
+        LuaTable dict = args[1].Read<LuaTable>();
+        LuaValue k = args[2];
+        if (XenonRT.GetType(k) != dict.Metatable!["__keyType"].Read<string>())
+            throw ExceptionBuilder.TypeMismatch(dict.Metatable!["__keyType"].Read<string>(), 
+                XenonRT.GetType(k), 
+                "key type");
+        LuaValue v = args[3];
+        if (XenonRT.GetType(v) != dict.Metatable!["__valType"].Read<string>())
+            throw ExceptionBuilder.TypeMismatch(dict.Metatable!["__valType"].Read<string>(), 
+                XenonRT.GetType(v), 
+                "val type");
 
-    public override Dictionary<string, XenonClassMethod> Methods => new();
+        dict[k] = v;
+        return dict;
+    }
+    public static async ValueTask<LuaValue> DictRemove(LuaTable args)
+    {   
+        LuaTable dict = args[1].Read<LuaTable>();
+        LuaValue k = args[2];
+        if (XenonRT.GetType(k) != dict.Metatable!["__keyType"].Read<string>())
+            throw ExceptionBuilder.TypeMismatch(dict.Metatable!["__keyType"].Read<string>(), 
+                XenonRT.GetType(k), 
+                "key type");
+
+        dict[k] = LuaValue.Nil;
+        return dict;
+    }
+    public static async ValueTask<LuaValue> DictContains(LuaTable args)
+    {   
+        LuaTable dict = args[1].Read<LuaTable>();
+        LuaValue k = args[2];
+        if (XenonRT.GetType(k) != dict.Metatable!["__keyType"].Read<string>())
+            throw ExceptionBuilder.TypeMismatch(dict.Metatable!["__keyType"].Read<string>(), 
+                XenonRT.GetType(k), 
+                "key type");
+        
+        return dict.ContainsKey(k);
+    }
+    public static async ValueTask<LuaValue> DictFind(LuaTable args)
+    {   
+        LuaTable dict = args[1].Read<LuaTable>();
+        LuaValue v = args[2];
+        if (XenonRT.GetType(v) != dict.Metatable!["__valType"].Read<string>())
+            throw ExceptionBuilder.TypeMismatch(dict.Metatable!["__valType"].Read<string>(), 
+                XenonRT.GetType(v), 
+                "value type");
+
+        foreach (var kvp in dict)
+            if (kvp.Value == v)
+                return kvp.Key;
+        
+        return LuaValue.Nil;
+    }
+
+    public override Dictionary<string, XenonClassMethod> Methods => new()
+    {
+        ["filter"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("dictionary", XenonRT.T_DICTIONARY),
+                [2] = ("predicate", XenonRT.T_FUNCTION)
+            },
+            Method = DictFilter,
+        },
+        ["enumerate"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("dictionary", XenonRT.T_DICTIONARY),
+                [2] = ("enumerator", XenonRT.T_FUNCTION)
+            },
+            Method = DictEnumerate,
+        },
+        ["measure"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("dictionary", XenonRT.T_DICTIONARY)
+            },
+            Method = DictMeasure,
+        },
+        ["add"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("dictionary", XenonRT.T_DICTIONARY),
+                [2] = ("key", XenonRT.T_ANY),
+                [3] = ("value", XenonRT.T_ANY),
+            },
+            Method = DictAdd,
+        },
+        ["remove"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("dictionary", XenonRT.T_DICTIONARY),
+                [2] = ("key", XenonRT.T_ANY),
+            },
+            Method = DictRemove,
+        },
+        ["contains"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("dictionary", XenonRT.T_DICTIONARY),
+                [2] = ("key", XenonRT.T_ANY),
+            },
+            Method = DictContains,
+        },
+        ["find"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("dictionary", XenonRT.T_DICTIONARY),
+                [2] = ("value", XenonRT.T_ANY),
+            },
+            Method = DictFind,
+        }
+    };
     public override string Name => "dict";
 }

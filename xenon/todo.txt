@@ -16,6 +16,14 @@
         [x] insert
         [x] contains
         [x] find
+    [x] dict
+        [x] filter
+        [x] enumerate
+        [x] measure
+        [x] add
+        [x] remove
+        [x] contains
+        [x] find
     [x] string
         [x] split
         [x] trim
@@ -46,3 +54,5 @@
     [ ] num
     [ ] func
     [ ] type
+        [ ] getHeaderProp
+        [ ] measureHeader
