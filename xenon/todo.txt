@@ -1,6 +1,6 @@
 [-] types
     [x] array
-    [ ] dicts
+    [x] dicts
     [x] custom type
     [x] func
 
@@ -52,6 +52,30 @@
         [x] asNum
         [x] fromNum
     [ ] num
+        [ ] odd
+        [ ] even
+        [ ] positive
+        [ ] negative
     [x] func
         [x] getArgMap
         [x] getReturnType
+    [x] math
+        [x] abs
+        [x] acos
+        [x] asin
+        [x] atan
+        [x] ceil
+        [x] cos
+        [x] deg
+        [x] exp
+        [x] floor
+        [x] log
+        [x] max
+        [x] min
+        [x] pi
+        [x] pow
+        [x] rad
+        [x] rand
+        [x] sin
+        [x] sqrt
+        [x] tan
