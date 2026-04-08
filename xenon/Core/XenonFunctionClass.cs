@@ -88,7 +88,11 @@ public class XenonFunctionClass : XenonClass<XenonFunctionClass>
         LuaTable func = args[1].Read<LuaTable>();
         // we can be certain that there will be a metatable
         // because funcs are always returned with one in ctor
-        return func.Metatable!["__funcArgs"];
+        Dictionary<LuaValue, LuaValue> dict = new();
+        foreach (var kvp in func.Metatable!["__funcArgs"].Read<LuaTable>())
+            dict[kvp.Key.Read<string>()] = kvp.Value.Read<string>();
+
+        return XenonDictionaryClass.CreateDict(XenonRT.T_STRING, XenonRT.T_STRING, dict);
     }
     
     public static async ValueTask<LuaValue> GetReturnType(LuaTable args)

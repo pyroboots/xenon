@@ -119,38 +119,7 @@ public class XenonTypeClass : XenonClass<XenonTypeClass>
         type[PROPERTY_READONLY_KEY] = propertyReadonlyMap;
         return type;
     }
-    
-    public static async ValueTask<LuaValue> TypeMeasureHeader(LuaTable args)
-    {   
-        LuaTable type = args[1].Read<LuaTable>();
-        return type.Metatable!.ArrayLength + 1;
-    }
-    public static async ValueTask<LuaValue> TypeGetHeaderProp(LuaTable args)
-    {   
-        LuaTable type = args[1].Read<LuaTable>();
-        string prop = args[2].Read<string>();
 
-        return type.Metatable![$"__{prop}"].Read<string>();
-    }
-
-    public override Dictionary<string, XenonClassMethod> Methods => new()
-    {
-        ["measureHeader"] = new()
-        {
-            Arguments = new()
-            {
-                [1] = ("type", XenonRT.T_ANY)
-            },
-            Method = TypeMeasureHeader
-        },
-        ["getHeaderProp"] = new()
-        {
-            Arguments = new()
-            {
-                [1] = ("type", XenonRT.T_ANY)
-            },
-            Method = TypeGetHeaderProp
-        }
-    };
+    public override Dictionary<string, XenonClassMethod> Methods => new();
     public override string Name => "type";
 }

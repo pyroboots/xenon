@@ -48,34 +48,26 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
         ctx.Return(dict.ArrayLength + 1);
         return 1;
     }
-    
-    public async override ValueTask<LuaValue> Constructor(LuaTable args)
-    {
-        LuaTable typePair = args[1].Read<LuaTable>();
-        string expectedKeyType = typePair[1].Read<string>();
-        string expectedValType = typePair[2].Read<string>();
 
+    public static LuaTable CreateDict(string keyType, string valType, Dictionary<LuaValue, LuaValue> items)
+    {
         LuaTable dict = new();
         dict.Metatable = new()
         {
-            ["__keyType"] = expectedKeyType,
-            ["__valType"] = expectedValType,
+            ["__keyType"] = keyType,
+            ["__valType"] = valType,
             
             ["__newindex"] = new LuaFunction("__set", Set),
             ["__index"] = new LuaFunction("__get", Get),
             ["__len"] = new LuaFunction("__length", Length),
         };
-
-        // skip one here because of typePair
-        foreach (var kvp in args.Skip(1))
+        
+        foreach (var kvp in items)
         {
-            string keyType = XenonRT.GetType(kvp.Key);
-            string valType = XenonRT.GetType(kvp.Value);
-
-            if (keyType != expectedKeyType)
-                throw ExceptionBuilder.TypeMismatch(expectedKeyType, keyType, "key type");
-            if (valType != expectedValType)
-                throw ExceptionBuilder.TypeMismatch(expectedKeyType, keyType, "value type");
+            if (keyType != XenonRT.GetType(kvp.Key))
+                throw ExceptionBuilder.TypeMismatch(keyType, XenonRT.GetType(kvp.Key), "key type");
+            if (valType != XenonRT.GetType(kvp.Value))
+                throw ExceptionBuilder.TypeMismatch(valType, XenonRT.GetType(kvp.Value), "value type");
 
             dict[kvp.Key] = kvp.Value;
         }
@@ -83,7 +75,21 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
         return dict;
     }
     
-    public static async ValueTask<LuaValue> DictFilter(LuaTable args)
+    public async override ValueTask<LuaValue> Constructor(LuaTable args)
+    {
+        LuaTable typePair = args[1].Read<LuaTable>();
+        string expectedKeyType = typePair[1].Read<string>();
+        string expectedValType = typePair[2].Read<string>();
+
+        Dictionary<LuaValue, LuaValue> items = new();
+        // skip 1 for typePair
+        foreach (var kvp in args.Skip(1))
+            items.Add(kvp.Key, kvp.Value);
+
+        return CreateDict(expectedKeyType, expectedValType, items);
+    }
+    
+    private static async ValueTask<LuaValue> DictFilter(LuaTable args)
     {
         LuaTable dict = args[1].Read<LuaTable>();
         LuaTable func = args[2].Read<LuaTable>();
@@ -92,14 +98,7 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
                 "filter return");
         
         LuaFunction innerFunc = func.Metatable!["__call"].Read<LuaFunction>();
-        LuaTable newDict = new()
-        {
-            [1] = new LuaTable
-            {
-                [1] = dict.Metatable!["__keyType"].Read<string>(),
-                [2] = dict.Metatable!["__valType"].Read<string>(),
-            }
-        };
+        Dictionary<LuaValue, LuaValue> newDict = new();
         foreach (var kvp in dict)
         {
             LuaTable funcArgs = new()
@@ -110,10 +109,12 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
             LuaValue result = (await XenonRT.Runtime.CallAsync(innerFunc, [dict, funcArgs]))[0];
             if (result.ToBoolean()) newDict[kvp.Key] = kvp.Value;
         }
-        
-        return await new XenonDictionaryClass().Constructor(newDict);   
+
+        string kType = dict.Metatable!["__keyType"].Read<string>();
+        string vType = dict.Metatable!["__keyType"].Read<string>();
+        return CreateDict(kType, vType, newDict);
     }
-    public static async ValueTask<LuaValue> DictEnumerate(LuaTable args)
+    private static async ValueTask<LuaValue> DictEnumerate(LuaTable args)
     {   
         LuaTable dict = args[1].Read<LuaTable>();
         LuaTable func = args[2].Read<LuaTable>();
@@ -131,12 +132,12 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
         
         return LuaValue.Nil;
     }
-    public static async ValueTask<LuaValue> DictMeasure(LuaTable args)
+    private static async ValueTask<LuaValue> DictMeasure(LuaTable args)
     {   
         LuaTable dict = args[1].Read<LuaTable>();
         return dict.ArrayLength + 1;
     }
-    public static async ValueTask<LuaValue> DictAdd(LuaTable args)
+    private static async ValueTask<LuaValue> DictAdd(LuaTable args)
     {   
         LuaTable dict = args[1].Read<LuaTable>();
         LuaValue k = args[2];
@@ -153,7 +154,7 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
         dict[k] = v;
         return dict;
     }
-    public static async ValueTask<LuaValue> DictRemove(LuaTable args)
+    private static async ValueTask<LuaValue> DictRemove(LuaTable args)
     {   
         LuaTable dict = args[1].Read<LuaTable>();
         LuaValue k = args[2];
@@ -165,7 +166,7 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
         dict[k] = LuaValue.Nil;
         return dict;
     }
-    public static async ValueTask<LuaValue> DictContains(LuaTable args)
+    private static async ValueTask<LuaValue> DictContains(LuaTable args)
     {   
         LuaTable dict = args[1].Read<LuaTable>();
         LuaValue k = args[2];
@@ -176,7 +177,7 @@ public class XenonDictionaryClass : XenonClass<XenonDictionaryClass>
         
         return dict.ContainsKey(k);
     }
-    public static async ValueTask<LuaValue> DictFind(LuaTable args)
+    private static async ValueTask<LuaValue> DictFind(LuaTable args)
     {   
         LuaTable dict = args[1].Read<LuaTable>();
         LuaValue v = args[2];

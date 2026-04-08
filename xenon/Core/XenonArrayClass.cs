@@ -45,53 +45,52 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
         return 1;
     }
     
-    public async override ValueTask<LuaValue> Constructor(LuaTable args)
+    public static LuaTable CreateArray(string type, params LuaValue[] items)
     {
-        // array {{t_str}, "hello, ", "world!"}
-        
-        if (!args.ContainsKey(1)) 
-            throw ExceptionBuilder.SyntaxMissingArg(Name, "array type", "argument 1");
-        string enforcedType = args[1].Read<LuaTable>()[1].Read<string>();
-
         LuaTable array = new();
         LuaTable meta = new()
         {
             ["__type"] = XenonRT.T_ARRAY,
-            ["__arrayType"] = enforcedType,
+            ["__arrayType"] = type,
             
             ["__newindex"] = new LuaFunction("__set", Set),
             ["__index"] = new LuaFunction("__get", Get),
             ["__len"] = new LuaFunction("__length", Length),
         };
         array.Metatable = meta;
-        
-        foreach (var kvp in args.Skip(1))
+
+        for (int i = 0; i < items.Length - 1; i++)
         {
-            if (kvp.Key.TryRead(out int idx) == false)
-                throw ExceptionBuilder.TypeMismatch(XenonRT.T_NUMBER, XenonRT.GetType(kvp.Key), "array index");
-            if (XenonRT.GetType(kvp.Value) != enforcedType)
-                throw ExceptionBuilder.TypeMismatch(enforcedType, XenonRT.GetType(kvp.Value), "array type");
-            
-            // -1 for the type initializer, -1 for luas starting idx
-            array[idx - 2] = kvp.Value;
+            if (XenonRT.GetType(items[i]) != type)
+                throw ExceptionBuilder.TypeMismatch(type, XenonRT.GetType(items[i]), "array type");
+            array[i] = items[i];
         }
         return array;
     }
     
-    public static async ValueTask<LuaValue> ArrayTransform(LuaTable args)
+    public async override ValueTask<LuaValue> Constructor(LuaTable args)
+    {
+        // array {{t_str}, "hello, ", "world!"}
+        string type = args[1].Read<string>();
+        List<LuaValue> items = new();
+        foreach (var kvp in args.Skip(1))
+            items.Add(kvp.Value);
+        
+        return CreateArray(type, items.ToArray());
+    }
+    
+    private static async ValueTask<LuaValue> ArrayTransform(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         LuaTable func = args[2].Read<LuaTable>();
-        if (func.Metatable!["__returnType"].Read<string>() != array.Metatable!["__arrayType"].Read<string>())
-            throw ExceptionBuilder.TypeMismatch(array.Metatable!["__arrayType"].Read<string>(),
+        
+        string type = array.Metatable!["__arrayType"].Read<string>();
+        if (func.Metatable!["__returnType"].Read<string>() != type)
+            throw ExceptionBuilder.TypeMismatch(type,
                 func.Metatable!["__returnType"].Read<string>(), "transform return");
-
         
         LuaFunction innerFunc = func.Metatable!["__call"].Read<LuaFunction>();
-        LuaTable newArray = new()
-        {
-            [1] = new LuaTable { [1] = array.Metatable!["__arrayType"].Read<string>() }
-        };
+        List<LuaValue> newArray = new();
         foreach (var kvp in array)
         {
             LuaTable funcArgs = new()
@@ -100,25 +99,22 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
                 ["index"] = kvp.Key
             };
             LuaValue result = (await XenonRT.Runtime.CallAsync(innerFunc, [array, funcArgs]))[0];
-            newArray[kvp.Key.Read<int>() + 2] = result;
+            newArray.Add(result);
         }
         
-        // we use the array ctor to set all the proper metamethods and values
-        return await new XenonArrayClass().Constructor(newArray);
+        return CreateArray(type, newArray.ToArray());
     }
-    public static async ValueTask<LuaValue> ArrayFilter(LuaTable args)
+    private static async ValueTask<LuaValue> ArrayFilter(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         LuaTable func = args[2].Read<LuaTable>();
+        string type = array.Metatable!["__arrayType"].Read<string>();
         if (func.Metatable!["__returnType"].Read<string>() != XenonRT.T_BOOLEAN)
             throw ExceptionBuilder.TypeMismatch(XenonRT.T_BOOLEAN, func.Metatable!["__returnType"].Read<string>(),
                 "filter return");
         
         LuaFunction innerFunc = func.Metatable!["__call"].Read<LuaFunction>();
-        LuaTable newArray = new()
-        {
-            [1] = new LuaTable { [1] = array.Metatable!["__arrayType"].Read<string>() }
-        };
+        List<LuaValue> newArray = new();
         foreach (var kvp in array)
         {
             LuaTable funcArgs = new()
@@ -127,15 +123,16 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
                 ["index"] = kvp.Key
             };
             LuaValue result = (await XenonRT.Runtime.CallAsync(innerFunc, [array, funcArgs]))[0];
-            if (result.ToBoolean()) newArray[kvp.Key.Read<int>() + 2] = kvp.Value;
+            if (result.ToBoolean()) newArray.Add(kvp.Value);
         }
         
-        return await new XenonArrayClass().Constructor(newArray);
+        return CreateArray(type, newArray.ToArray());
     }
-    public static async ValueTask<LuaValue> ArraySlice(LuaTable args)
+    private static async ValueTask<LuaValue> ArraySlice(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         int length = array.ArrayLength + 1;
+        string type = array.Metatable!["__arrayType"].Read<string>();
 
         int startIdx = args[2].Read<int>();
         int endIdx = args[3].Read<int>();
@@ -145,18 +142,15 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
             throw new IndexOutOfRangeException($"end index {endIdx} out of bounds of array");
         if (startIdx > endIdx)
             throw new IndexOutOfRangeException($"end index ({endIdx}) cannot be smaller than start index ({startIdx})");
-        LuaTable newArray = new()
-        {
-            [1] = new LuaTable { [1] = array.Metatable!["__arrayType"].Read<string>() }
-        };
+        List<LuaValue> newArray = new();
 
         for (int i = startIdx; i < endIdx; i++) 
             if (array.ContainsKey(i))
-                newArray.Insert(newArray.ArrayLength + 2, array[i]);
+                newArray.Add(array[i]);
         
-        return await new XenonArrayClass().Constructor(newArray);
+        return CreateArray(type, newArray.ToArray());
     }
-    public static async ValueTask<LuaValue> ArrayEnumerate(LuaTable args)
+    private static async ValueTask<LuaValue> ArrayEnumerate(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         LuaTable func = args[2].Read<LuaTable>();
@@ -174,12 +168,12 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
         
         return LuaValue.Nil;
     }
-    public static async ValueTask<LuaValue> ArrayMeasure(LuaTable args)
+    private static async ValueTask<LuaValue> ArrayMeasure(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         return array.ArrayLength + 1;
     }
-    public static async ValueTask<LuaValue> ArrayAppend(LuaTable args)
+    private static async ValueTask<LuaValue> ArrayAppend(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         LuaValue item = args[2];
@@ -190,7 +184,7 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
         array[array.ArrayLength + 1] = item;
         return array;
     }
-    public static async ValueTask<LuaValue> ArrayPrepend(LuaTable args)
+    private static async ValueTask<LuaValue> ArrayPrepend(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         LuaValue item = args[2];
@@ -207,7 +201,7 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
         result.Metatable = array.Metatable;
         return result;
     }
-    public static async ValueTask<LuaValue> ArrayInsert(LuaTable args)
+    private static async ValueTask<LuaValue> ArrayInsert(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         LuaValue item = args[2];
@@ -230,7 +224,7 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
         result.Metatable = array.Metatable;
         return result;
     }
-    public static async ValueTask<LuaValue> ArrayContains(LuaTable args)
+    private static async ValueTask<LuaValue> ArrayContains(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         LuaValue item = args[2];
@@ -242,7 +236,7 @@ public class XenonArrayClass : XenonClass<XenonArrayClass>
             if (kvp.Value == item) return true;
         return false;
     }
-    public static async ValueTask<LuaValue> ArrayFind(LuaTable args)
+    private static async ValueTask<LuaValue> ArrayFind(LuaTable args)
     {   
         LuaTable array = args[1].Read<LuaTable>();
         LuaValue item = args[2];

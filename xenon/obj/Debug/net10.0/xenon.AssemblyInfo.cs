@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("xenon")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1181007c510b18fe0fcbd6c0033f4415fb11f53")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b59dc077146f2165c0ecf7f7f76275db8c08769")]
 [assembly: System.Reflection.AssemblyProductAttribute("xenon")]
 [assembly: System.Reflection.AssemblyTitleAttribute("xenon")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

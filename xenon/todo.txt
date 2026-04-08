@@ -52,7 +52,6 @@
         [x] asNum
         [x] fromNum
     [ ] num
-    [ ] func
-    [ ] type
-        [ ] getHeaderProp
-        [ ] measureHeader
+    [x] func
+        [x] getArgMap
+        [x] getReturnType
