@@ -3,6 +3,7 @@ namespace xenon;
 public class XenonRuntimeException : Exception
 {
     public XenonRuntimeException(string msg) : base(msg) { }
+    public XenonRuntimeException(string msg, Exception inner) : base(msg, inner) { }
 }
 
 public class XenonSyntaxException : XenonRuntimeException
@@ -29,4 +30,8 @@ public class ExceptionBuilder
         => new($"missing arg {arg} on keyword {keyword}" + (nuance is null ? "" : $" ({nuance})"));
     public static XenonSyntaxException SyntaxIncorrectArgCount(int expected, int got, string? nuance = null)
         => new($"expected {expected} arg(s), got {got}" + (nuance is null ? "" : $" ({nuance})"));
+    public static XenonSyntaxException InvalidEnumMember(string enumName, string entry, string? nuance = null)
+        => new($"invalid enum member {entry} in enum {enumName}" + (nuance is null ? "" : $" ({nuance})"));
+    public static XenonRuntimeException MethodNotAssignable(string method, string type, string? nuance = null)
+        => new($"cannot assign to method {method} on type {type}" + (nuance is null ? "" : $" ({nuance})"));
 }

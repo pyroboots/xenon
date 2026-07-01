@@ -29,3 +29,20 @@ bar = dict {{t_str, t_str},
 }
 
 console.outLn{array.contains{arr, "hello"}}
+
+Color = enum {[[Color]], [[Red]], [[Green]]}
+
+Person = type {[[Person]],
+    name = t_str,
+    color = t_Color,
+    greet = func {{}, [[
+        console.outLn{this.name}
+    ]], t_void},
+}
+
+john = Person {
+    name = "John",
+    color = Color.Red
+}
+
+john.greet{}

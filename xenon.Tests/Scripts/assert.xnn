@@ -1,0 +1,2 @@
+assert{number.isOdd{7}}
+assert{math.squareRoot{16} == 4}

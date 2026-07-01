@@ -1,0 +1,78 @@
+# build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+publish/
+apphost
+
+# dotnet / msbuild generated
+*.dll
+*.exe
+*.pdb
+*.cache
+*.Up2Date
+*.deps.json
+*.runtimeconfig.json
+*.sourcelink.json
+*.AssemblyInfo.cs
+*.AssemblyInfoInputs.cache
+*.assets.cache
+*.csproj.CoreCompileInputs.cache
+*.csproj.FileListAbsolute.txt
+*.csproj.AssemblyReference.cache
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.genruntimeconfig.cache
+*.GlobalUsings.g.cs
+.NETCoreApp,Version=*.AssemblyAttributes.cs
+project.assets.json
+project.nuget.cache
+project.packagespec.json
+*.nuget.dgspec.json
+*.nuget.g.props
+*.nuget.g.targets
+rider.project.*
+
+# test
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+*.coveragexml
+
+# nuget
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+# ide — visual studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# ide — rider / intellij
+.idea/
+*.sln.iml
+
+# ide — vscode (local only)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# os
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# misc
+*.swp
+*~
+*.tmp
+*.bak

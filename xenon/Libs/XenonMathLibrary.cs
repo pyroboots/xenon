@@ -34,6 +34,16 @@ public class XenonMathLibrary : XenonStaticClass<XenonMathLibrary>
         => MathF.Sqrt(args[1].Read<float>());
     public static async ValueTask<LuaValue> Tangent(LuaTable args)
         => MathF.Tan(args[1].Read<float>());
+    public static async ValueTask<LuaValue> Degrees(LuaTable args)
+        => args[1].Read<float>() * (180f / MathF.PI);
+    public static async ValueTask<LuaValue> Radians(LuaTable args)
+        => args[1].Read<float>() * (MathF.PI / 180f);
+    public static async ValueTask<LuaValue> Round(LuaTable args)
+        => MathF.Round(args[1].Read<float>());
+    public static async ValueTask<LuaValue> Sign(LuaTable args)
+        => MathF.Sign(args[1].Read<float>());
+    public static async ValueTask<LuaValue> Clamp(LuaTable args)
+        => Math.Clamp(args[1].Read<float>(), args[2].Read<float>(), args[3].Read<float>());
     
     public static async ValueTask<LuaValue> Random(LuaTable args)
         => System.Random.Shared.NextDouble();
@@ -128,6 +138,36 @@ public class XenonMathLibrary : XenonStaticClass<XenonMathLibrary>
         {
             Arguments = new() { [1] = ("x", XenonRT.T_NUMBER) },
             Method = Tangent
+        },
+        ["deg"] = new()
+        {
+            Arguments = new() { [1] = ("radians", XenonRT.T_NUMBER) },
+            Method = Degrees
+        },
+        ["rad"] = new()
+        {
+            Arguments = new() { [1] = ("degrees", XenonRT.T_NUMBER) },
+            Method = Radians
+        },
+        ["round"] = new()
+        {
+            Arguments = new() { [1] = ("x", XenonRT.T_NUMBER) },
+            Method = Round
+        },
+        ["sign"] = new()
+        {
+            Arguments = new() { [1] = ("x", XenonRT.T_NUMBER) },
+            Method = Sign
+        },
+        ["clamp"] = new()
+        {
+            Arguments = new()
+            {
+                [1] = ("x", XenonRT.T_NUMBER),
+                [2] = ("min", XenonRT.T_NUMBER),
+                [3] = ("max", XenonRT.T_NUMBER),
+            },
+            Method = Clamp
         },
         ["random"] = new()
         {

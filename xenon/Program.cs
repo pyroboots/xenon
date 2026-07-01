@@ -1,19 +1,16 @@
-using Lua;
-using Lua.Standard;
-using xenon.Libs;
-
 namespace xenon;
 
 class Program
 {
     static async Task Main(string[] args)
     {
+        if (args.Length > 0 && args[0] is "--repl" or "-r")
+        {
+            await XenonRepl.RunAsync();
+            return;
+        }
+
         string path = args.Length > 0 ? args[0] : "test.xnn";
-        string file = File.ReadAllText(path);
-        
-        XenonRT.Bootstrap();
-        
-        string chunkName = "@" + Path.GetFullPath(path).Replace('\\', '/');
-        await XenonRT.Runtime.DoStringAsync(file, chunkName);
+        await XenonScriptRunner.RunFileAsync(path);
     }
 }

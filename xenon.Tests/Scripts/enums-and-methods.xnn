@@ -1,0 +1,24 @@
+Color = enum {[[Color]],
+    [[Red]],
+    [[Green]],
+    Blue = 5,
+}
+
+assert{typeof{Color.Red} == t_Color}
+assert{typeof{Color.Green} == t_Color}
+assert{typeof{Color.Blue} == t_Color}
+
+Item = type {[[Item]],
+    color = t_Color,
+    label = func {{}, [[
+        console.outLn{this.color}
+    ]], t_void},
+    setColor = func {{c = t_Color}, [[
+        this.color = a.c
+    ]], t_void},
+}
+
+item = Item { color = Color.Green }
+item.label{}
+item.setColor{c = Color.Blue}
+assert{typeof{item.color} == t_Color}

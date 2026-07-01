@@ -23,36 +23,24 @@ public class XenonRT
     public const string T_ARRAY = "t_array";
     public const string T_DICTIONARY = "t_dict";
     
-    public static void Bootstrap()
-    {
-        RegisterType(T_STRING);
-        RegisterType(T_NUMBER);
-        RegisterType(T_BOOLEAN);
-        RegisterType(T_FUNCTION);
-        RegisterType(T_LUA_FUNCTION);
-        RegisterType(T_VOID);
-        SetImmutability("void", "keyword");
-        RegisterType(T_ANY);
-        RegisterType(T_ARRAY);
-        RegisterType(T_DICTIONARY);
-        
-        XenonBasicLibrary.Implement(ref Runtime);
-        XenonBasicLibrary.Implement(ref Compiler);
-        SetImmutability("console", "core library");
-        
-        RegisterKeyword<XenonFunctionClass>("func");
-        RegisterKeyword<XenonTypeClass>("type");
-        RegisterKeyword<XenonArrayClass>("array");
-        RegisterKeyword<XenonStringClass>("str");
-        RegisterKeyword<XenonBoolClass>("bool");
-        RegisterKeyword<XenonDictionaryClass>("dict");
-        
-        RegisterFunc("typeof", Typeof);
-        SetImmutability("typeof", "keyword");
-        RegisterFunc("unmanaged", UnmanagedBlock);
-        SetImmutability("unmanaged", "keyword");
+    public static void Bootstrap() => XenonBootstrap.Initialize();
 
-        // immutability protection
+    internal static void Reset()
+    {
+        Runtime.Dispose();
+        Compiler.Dispose();
+        Runtime = LuaState.Create();
+        Compiler = LuaState.Create();
+        _actualEnvironment = new();
+        _immutableGlobals = new();
+        XenonBootstrap.Reset();
+    }
+
+    internal static LuaValue GetGlobal(string key) => _actualEnvironment[key];
+
+    internal static void InstallRuntimeEnvironmentGuards()
+    {
+        // NOTE FOR FUTURE SELF: compiler does not need immutability, do not add
         Runtime.Environment.Metatable = new()
         {
             ["__index"] = new LuaFunction(async (ctx, ct) =>
@@ -65,15 +53,14 @@ public class XenonRT
             {
                 string key = ctx.GetArgument<string>(1);
                 LuaValue val = ctx.GetArgument(2);
-                
+
                 if (_immutableGlobals.ContainsKey(key))
                     throw ExceptionBuilder.ModifyImmutable(_immutableGlobals[key], key);
-                
+
                 _actualEnvironment[key] = val;
                 return 0;
             })
         };
-        // NOTE FOR FUTURE SELF: compiler does not need immutability, do not add
     }
 
     public static void SetImmutability(string key, string type) => _immutableGlobals[key] = type;
@@ -91,10 +78,20 @@ public class XenonRT
         Compiler.Environment[name] = func;
     }
 
-    public static void RegisterKeyword<TXenonClass>(string name) where TXenonClass : class, new()
+    public static void RegisterClass<TXenonClass>(string name) where TXenonClass : class, new()
     {
         _actualEnvironment[name] = XenonClass<TXenonClass>.Static();   
         Compiler.Environment[name] = XenonClass<TXenonClass>.Static();  
+        SetImmutability(name, "keyword");
+    }
+    
+    public static void RegisterStaticClass<TXenonStaticClass>() where TXenonStaticClass : XenonStaticClass<TXenonStaticClass>, new()
+        => RegisterStaticClass<TXenonStaticClass>(new TXenonStaticClass().Name);
+
+    public static void RegisterStaticClass<TXenonStaticClass>(string name) where TXenonStaticClass : class, new()
+    {
+        _actualEnvironment[name] = XenonStaticClass<TXenonStaticClass>.Static();
+        Compiler.Environment[name] = XenonStaticClass<TXenonStaticClass>.Static();
         SetImmutability(name, "keyword");
     }
 

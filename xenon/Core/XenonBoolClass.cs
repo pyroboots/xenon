@@ -48,11 +48,10 @@ public class XenonBoolClass : XenonClass<XenonBoolClass>
         if (array.Metatable!["__arrayType"].Read<string>() != XenonRT.T_BOOLEAN)
             throw ExceptionBuilder.TypeMismatch(XenonRT.T_BOOLEAN, array.Metatable!["__arrayType"].Read<string>(), "array type");
 
-        bool result = false;
-        foreach (var kvp in array)
-            if (kvp.Value.Read<bool>()) result = true;
-        
-        return result;
+        foreach (LuaValue item in XenonArrayUtil.Values(array))
+            if (item.Read<bool>()) return true;
+
+        return false;
     }
     public static async ValueTask<LuaValue> All(LuaTable args)
     {
@@ -62,11 +61,10 @@ public class XenonBoolClass : XenonClass<XenonBoolClass>
         if (array.Metatable!["__arrayType"].Read<string>() != XenonRT.T_BOOLEAN)
             throw ExceptionBuilder.TypeMismatch(XenonRT.T_BOOLEAN, array.Metatable!["__arrayType"].Read<string>(), "array type");
 
-        bool result = true;
-        foreach (var kvp in array)
-            if (kvp.Value.Read<bool>() == false) result = false;
-        
-        return result;
+        foreach (LuaValue item in XenonArrayUtil.Values(array))
+            if (!item.Read<bool>()) return false;
+
+        return true;
     }
 
     public override Dictionary<string, XenonClassMethod> Methods => new()

@@ -1,0 +1,6 @@
+arr = array {{t_num}, 1, 2, 3}
+add = func {{acc = t_num, item = t_num}, [[return a.acc + a.item]], t_num}
+assert{add{acc = 10, item = 1} == 11}
+sum = array.reduce{arr, add, 10}
+console.outLn{sum}
+assert{sum == 16}

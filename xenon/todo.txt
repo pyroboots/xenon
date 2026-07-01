@@ -3,79 +3,34 @@
     [x] dicts
     [x] custom type
     [x] func
+    [x] enum
+    [x] type methods
+    [x] optional fields
+    [x] distinct instances
+
+[-] builtins
+    [x] cast
+    [x] try
+    [x] import
+    [x] forEach
 
 [-] std libs
-    [x] array
-        [x] transform
-        [x] filter
-        [x] slice
-        [x] enumerate
-        [x] measure
-        [x] append
-        [x] prepend
-        [x] insert
-        [x] contains
-        [x] find
-    [x] dict
-        [x] filter
-        [x] enumerate
-        [x] measure
-        [x] add
-        [x] remove
-        [x] contains
-        [x] find
-    [x] string
-        [x] split
-        [x] trim
-        [x] contains
-        [x] replace
-        [x] join
-        [x] measure
-        [x] substring
-        [x] startsWith
-        [x] endsWith
-        [x] charAt
-        [x] upper
-        [x] lower
-    [x] bool
-        [x] and
-        [x] or
-        [x] not
-        [x] nand
-        [x] nor
-        [x] xor
-        [x] xnor
-        [x] ternary
-        [x] whichever
-        [x] any
-        [x] all
-        [x] asNum
-        [x] fromNum
-    [ ] num
-        [ ] odd
-        [ ] even
-        [ ] positive
-        [ ] negative
-    [x] func
-        [x] getArgMap
-        [x] getReturnType
-    [x] math
-        [x] abs
-        [x] acos
-        [x] asin
-        [x] atan
-        [x] ceil
-        [x] cos
-        [x] deg
-        [x] exp
-        [x] floor
-        [x] log
-        [x] max
-        [x] min
-        [x] pi
-        [x] pow
-        [x] rad
-        [x] rand
-        [x] sin
-        [x] sqrt
-        [x] tan
+    [x] array (transform, filter, slice, enumerate, measure, append, prepend, insert, contains, find, reduce, reverse, first, last, remove, sort)
+    [x] dict (filter, enumerate, measure, add, remove, contains, find, keys, values, merge, getOr, update)
+    [x] string (split, trim, contains, replace, replaceAll, join, measure, substring, startsWith, endsWith, charAt, upper, lower, isEmpty, isBlank, repeat, format)
+    [x] bool (and, or, not, nand, nor, xor, xnor, ternary, whichever, any, all, asNum, fromNum)
+    [x] num (odd, even, positive, negative, integer, clamp, round, parse, between)
+    [x] func (getArgMap, getReturnType)
+    [x] math (abs, acos, asin, atan, ceil, cos, deg, exp, floor, log, max, min, pi, pow, rad, rand, sin, sqrt, tan, round, sign, clamp)
+    [x] fs (read, write, exists, list, join)
+    [x] json (parse, stringify)
+    [x] time (now, sleep, format)
+    [x] path (join, baseName, dirName, extension)
+    [x] enumlib (toInt, fromInt, members)
+    [x] console (out, outLn, err, errLn, in, inLn)
+
+[-] future
+    [x] type extends
+    [x] REPL
+    [x] better error line numbers
+    [x] regex/match (str.match, str.test)

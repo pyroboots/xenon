@@ -8,6 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="xenon.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="LuaCSharp" Version="0.5.3" />
       <None Update="..\test.xnn" CopyToOutputDirectory="PreserveNewest" Link="test.xnn" />
     </ItemGroup>
